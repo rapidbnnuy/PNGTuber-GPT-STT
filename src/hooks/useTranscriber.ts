@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { useWorker } from "./useWorker";
 import Constants from "../utils/Constants";
 
@@ -23,7 +23,7 @@ export interface TranscriberData {
     isBusy: boolean;
     tps?: number;
     text: string;
-    chunks: { text: string; timestamp: [number, number | null] }[];
+    history: string[];
 }
 
 export interface Transcriber {
@@ -31,7 +31,7 @@ export interface Transcriber {
     isBusy: boolean;
     isModelLoading: boolean;
     progressItems: ProgressItem[];
-    start: (audioData: AudioBuffer | undefined) => void;
+    start: (audioData: AudioBuffer) => void;
     output?: TranscriberData;
     model: string;
     setModel: (model: string) => void;
@@ -49,15 +49,14 @@ export function useTranscriber(): Transcriber {
     );
     const [isBusy, setIsBusy] = useState(false);
     const [isModelLoading, setIsModelLoading] = useState(false);
-
     const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
+
+    const historyRef = useRef<string[]>([]);
 
     const webWorker = useWorker((event) => {
         const message = event.data;
-        // Update the state with the result
         switch (message.status) {
             case "progress":
-                // Model file progress: update one of the progress items.
                 setProgressItems((prev) =>
                     prev.map((item) => {
                         if (item.file === message.file) {
@@ -68,20 +67,26 @@ export function useTranscriber(): Transcriber {
                 );
                 break;
             case "update":
+                // Ignore intermediate updates in VAD mode - we want the final result
+                break;
             case "complete":
-                const busy = message.status === "update";
-                const updateMessage = message as TranscriberUpdateData;
+                const completeMessage = message as TranscriberUpdateData;
+                const fullText = completeMessage.data.text.trim();
+
+                if (fullText.length > 0) {
+                    historyRef.current.push(fullText);
+                }
+
                 setTranscript({
-                    isBusy: busy,
-                    text: updateMessage.data.text,
-                    tps: updateMessage.data.tps,
-                    chunks: updateMessage.data.chunks,
+                    isBusy: false,
+                    text: "",
+                    tps: completeMessage.data.tps,
+                    history: [...historyRef.current]
                 });
-                setIsBusy(busy);
+                setIsBusy(false);
                 break;
 
             case "initiate":
-                // Model file start load: add a new progress item to the list.
                 setIsModelLoading(true);
                 setProgressItems((prev) => [...prev, message]);
                 break;
@@ -90,19 +95,15 @@ export function useTranscriber(): Transcriber {
                 break;
             case "error":
                 setIsBusy(false);
-                alert(
-                    `An error occurred: "${message.data.message}". Please file a bug report.`,
-                );
+                alert(`${message.data.message} Error.`);
                 break;
             case "done":
-                // Model file loaded: remove the progress item from the list.
                 setProgressItems((prev) =>
                     prev.filter((item) => item.file !== message.file),
                 );
                 break;
 
             default:
-                // initiate/download/done
                 break;
         }
     });
@@ -118,27 +119,24 @@ export function useTranscriber(): Transcriber {
 
     const onInputChange = useCallback(() => {
         setTranscript(undefined);
+        historyRef.current = [];
     }, []);
 
     const postRequest = useCallback(
-        async (audioData: AudioBuffer | undefined) => {
+        async (audioData: AudioBuffer) => {
             if (audioData) {
-                setTranscript(undefined);
                 setIsBusy(true);
 
                 let audio;
                 if (audioData.numberOfChannels === 2) {
                     const SCALING_FACTOR = Math.sqrt(2);
-
-                    const left = audioData.getChannelData(0);
-                    const right = audioData.getChannelData(1);
-
+                    let left = audioData.getChannelData(0);
+                    let right = audioData.getChannelData(1);
                     audio = new Float32Array(left.length);
                     for (let i = 0; i < audioData.length; ++i) {
-                        audio[i] = (SCALING_FACTOR * (left[i] + right[i])) / 2;
+                        audio[i] = SCALING_FACTOR * (left[i] + right[i]) / 2;
                     }
                 } else {
-                    // If the audio is not stereo, we can just use the first channel:
                     audio = audioData.getChannelData(0);
                 }
 

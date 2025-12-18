@@ -13,24 +13,23 @@ function mobileTabletCheck() {
             check = true;
     })(
         navigator.userAgent ||
-            navigator.vendor ||
-            ("opera" in window && typeof window.opera === "string"
-                ? window.opera
-                : ""),
+        navigator.vendor ||
+        ("opera" in window && typeof window.opera === "string"
+            ? window.opera
+            : ""),
     );
     return check;
 }
 const isMobileOrTablet = mobileTabletCheck();
 export default {
     SAMPLING_RATE: 16000,
-    DEFAULT_AUDIO_URL: `https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/${
-        isMobileOrTablet ? "jfk" : "ted_60_16k"
-    }.wav`,
+    DEFAULT_AUDIO_URL: `https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/${isMobileOrTablet ? "jfk" : "ted_60_16k"
+        }.wav`,
     DEFAULT_MODEL: isMobileOrTablet
         ? "onnx-community/whisper-tiny"
-        : "onnx-community/whisper-base",
+        : "onnx-community/whisper-small.en",
     DEFAULT_SUBTASK: "transcribe",
     DEFAULT_LANGUAGE: "english",
     DEFAULT_QUANTIZED: isMobileOrTablet,
-    DEFAULT_MULTILINGUAL: true,
+    DEFAULT_MULTILINGUAL: isMobileOrTablet,
 };

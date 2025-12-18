@@ -1,99 +1,82 @@
 import { useRef, useEffect } from "react";
 
 import { TranscriberData } from "../hooks/useTranscriber";
-import { formatAudioTimestamp } from "../utils/AudioUtils";
 
 interface Props {
     transcribedData: TranscriberData | undefined;
+    triggerPhrase?: string;
 }
 
-export default function Transcript({ transcribedData }: Props) {
+export default function Transcript({ transcribedData, triggerPhrase }: Props) {
     const divRef = useRef<HTMLDivElement>(null);
 
-    const saveBlob = (blob: Blob, filename: string) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.click();
-        URL.revokeObjectURL(url);
-    };
-    const exportTXT = () => {
-        const chunks = transcribedData?.chunks ?? [];
-        const text = chunks
-            .map((chunk) => chunk.text)
-            .join("")
-            .trim();
-
-        const blob = new Blob([text], { type: "text/plain" });
-        saveBlob(blob, "transcript.txt");
-    };
-    const exportJSON = () => {
-        let jsonData = JSON.stringify(transcribedData?.chunks ?? [], null, 2);
-
-        // post-process the JSON to make it more readable
-        const regex = /( {4}"timestamp": )\[\s+(\S+)\s+(\S+)\s+\]/gm;
-        jsonData = jsonData.replace(regex, "$1[$2 $3]");
-
-        const blob = new Blob([jsonData], { type: "application/json" });
-        saveBlob(blob, "transcript.json");
-    };
-
-    // Scroll to the bottom when the component updates
+    // Auto-scroll logic
     useEffect(() => {
         if (divRef.current) {
             const diff = Math.abs(
                 divRef.current.offsetHeight +
-                    divRef.current.scrollTop -
-                    divRef.current.scrollHeight,
+                divRef.current.scrollTop -
+                divRef.current.scrollHeight,
             );
 
             if (diff <= 100) {
-                // We're close enough to the bottom, so scroll to the bottom
                 divRef.current.scrollTop = divRef.current.scrollHeight;
             }
         }
     });
 
+    // Helper to check for trigger phrase
+    const hasTrigger = (text: string): boolean => {
+        if (!triggerPhrase || !triggerPhrase.trim()) return false;
+
+        try {
+            // Escape special regex chars from the trigger phrase
+            const escaped = triggerPhrase.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Allow flexibility: spaces in trigger match any sequence of whitespace or punctuation
+            // e.g. "hey rapid" matches "Hey, Rapid" or "Hey Rapid!" or "hey... rapid"
+            const pattern = escaped.replace(/\s+/g, '[\\s\\p{P}]*');
+            const regex = new RegExp(pattern, 'iu'); // i = case insensitive, u = unicode (for \p{P})
+            return regex.test(text);
+        } catch (e) {
+            console.warn("Invalid regex pattern", e);
+            return false;
+        }
+    };
+
     return (
         <div
             ref={divRef}
-            className='w-full flex flex-col my-2 p-4 max-h-[20rem] overflow-y-auto'
+            className='w-full flex flex-col my-2 h-full'
         >
-            {transcribedData?.chunks &&
-                transcribedData.chunks.map((chunk, i) => (
-                    <div
-                        key={`${i}-${chunk.text}`}
-                        className={`w-full flex flex-row mb-2 ${transcribedData?.isBusy ? "bg-gray-100" : "bg-white"} rounded-lg p-4 shadow-xl shadow-black/5 ring-1 ring-slate-700/10`}
-                    >
-                        <div className='mr-5'>
-                            {formatAudioTimestamp(chunk.timestamp[0])}
+            {!transcribedData?.history || transcribedData.history.length === 0 ? (
+                <div className="text-gray-500 text-center mt-10 italic">
+                    Waiting for speech...
+                </div>
+            ) : (
+                transcribedData.history.map((line, i) => {
+                    const isTriggered = hasTrigger(line);
+                    return (
+                        <div key={i} className="mb-4">
+                            <div className="text-xs text-zinc-500 mb-1">Message #{i + 1}</div>
+                            <div
+                                className={`
+                                    p-3 rounded-2xl rounded-tl-none inline-block max-w-full text-white text-lg shadow-md border 
+                                    transition-colors duration-300
+                                    ${isTriggered
+                                        ? 'bg-green-900/40 border-green-500 shadow-green-900/20'
+                                        : 'bg-zinc-800 border-zinc-700/50'}
+                                `}
+                            >
+                                {line}
+                            </div>
                         </div>
-                        {chunk.text}
-                    </div>
-                ))}
-            {transcribedData?.tps && (
-                <p className='text-sm text-center mt-4 mb-1'>
-                    <span className='font-semibold text-black'>
-                        {transcribedData?.tps.toFixed(2)}
-                    </span>{" "}
-                    <span className='text-gray-500'>tokens/second</span>
-                </p>
+                    );
+                })
             )}
-            {transcribedData && !transcribedData.isBusy && (
-                <div className='w-full text-right'>
-                    <button
-                        onClick={exportTXT}
-                        className='text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2 text-center mr-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 inline-flex items-center'
-                    >
-                        Export TXT
-                    </button>
-                    <button
-                        onClick={exportJSON}
-                        className='text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2 text-center mr-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 inline-flex items-center'
-                    >
-                        Export JSON
-                    </button>
+
+            {transcribedData?.tps && (
+                <div className="fixed bottom-4 right-4 text-green-500 text-xs bg-black/50 p-1 rounded">
+                    {transcribedData.tps.toFixed(2)} tok/s
                 </div>
             )}
         </div>
