@@ -25,3 +25,4 @@ https://github.com/xenova/whisper-web/assets/26504141/5d6ed3d9-5f99-4d89-8e38-9d
     > Check out [this issue](https://github.com/xenova/whisper-web/issues/8) for more details.
 
 3. Open the link (e.g., [http://localhost:5173/](http://localhost:5173/)) in your browser.
+# PNGTuber-GPT-STT
