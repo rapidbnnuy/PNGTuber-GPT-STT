@@ -30,6 +30,8 @@ interface SettingsModalProps {
     setTriggerPhrase: (val: string) => void;
     twitchUsername: string;
     setTwitchUsername: (val: string) => void;
+    broadcastUserId: string;
+    setBroadcastUserId: (val: string) => void;
     selectedCharacterId: string;
     setSelectedCharacterId: (val: string) => void;
 }
@@ -202,6 +204,17 @@ export function SettingsModal(props: SettingsModalProps) {
                                                         ))}
                                                     </select>
                                                 </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-300 mb-2">Broadcaster ID</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. 44445592"
+                                                    value={props.broadcastUserId}
+                                                    onChange={(e) => props.setBroadcastUserId(e.target.value)}
+                                                    className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                                                />
                                             </div>
                                         </div>
                                     </section>

@@ -28,9 +28,15 @@ function AudioManagerInternal() {
     const [silenceDuration, setSilenceDuration] = useState(1500);
     const [minSpeechDuration, setMinSpeechDuration] = useState(100);
 
-    const [triggerPhrase, setTriggerPhrase] = useState<string>("");
-    const [twitchUsername, setTwitchUsername] = useState<string>("");
+    const [triggerPhrase, setTriggerPhrase] = useState<string>(() => localStorage.getItem("triggerPhrase") || "");
+    const [twitchUsername, setTwitchUsername] = useState<string>(() => localStorage.getItem("twitchUsername") || "");
+    const [broadcastUserId, setBroadcastUserId] = useState<string>(() => localStorage.getItem("broadcastUserId") || "");
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>(CHARACTERS[0].id);
+
+    // Persistence
+    useEffect(() => { localStorage.setItem("triggerPhrase", triggerPhrase); }, [triggerPhrase]);
+    useEffect(() => { localStorage.setItem("twitchUsername", twitchUsername); }, [twitchUsername]);
+    useEffect(() => { localStorage.setItem("broadcastUserId", broadcastUserId); }, [broadcastUserId]);
 
     const [isPermissionsGranted, setIsPermissionsGranted] = useState(false);
     const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
@@ -76,6 +82,11 @@ function AudioManagerInternal() {
                                 },
                                 args: {
                                     userName: twitchUsername,
+                                    broadcastUserId: broadcastUserId,
+                                    broadcaster: twitchUsername, // Mirror userName
+                                    broadcasterId: broadcastUserId, // Some actions might use this one
+                                    currentGame: "Just Chatting",
+                                    currentTitle: "Streamer.Bot Interaction",
                                     rawInput: text
                                 }
                             })
@@ -88,7 +99,7 @@ function AudioManagerInternal() {
         } else if (history.length === 0) {
             lastProcessedIndexRef.current = -1; // Reset
         }
-    }, [transcriber.output?.history, triggerPhrase, twitchUsername, selectedCharacterId]);
+    }, [transcriber.output?.history, triggerPhrase, twitchUsername, broadcastUserId, selectedCharacterId]);
 
     const vad = useVADRecorder({
         onSpeechEnd: (buffer) => {
@@ -211,6 +222,8 @@ function AudioManagerInternal() {
                 setTriggerPhrase={setTriggerPhrase}
                 twitchUsername={twitchUsername}
                 setTwitchUsername={setTwitchUsername}
+                broadcastUserId={broadcastUserId}
+                setBroadcastUserId={setBroadcastUserId}
                 selectedCharacterId={selectedCharacterId}
                 setSelectedCharacterId={setSelectedCharacterId}
             />
