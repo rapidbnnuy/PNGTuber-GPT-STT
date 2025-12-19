@@ -19,11 +19,17 @@ interface TranscriberUpdateData {
     };
 }
 
+export interface TranscriptionMessage {
+    text: string;
+    timestamp: number;
+    status: 'pending' | 'completed' | 'error' | 'ignored';
+}
+
 export interface TranscriberData {
     isBusy: boolean;
     tps?: number;
     text: string;
-    history: string[];
+    history: TranscriptionMessage[];
 }
 
 export interface Transcriber {
@@ -52,7 +58,7 @@ export function useTranscriber(): Transcriber {
     const [isModelLoading, setIsModelLoading] = useState(false);
     const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
 
-    const historyRef = useRef<string[]>([]);
+    const historyRef = useRef<TranscriptionMessage[]>([]);
 
     const webWorker = useWorker((event) => {
         const message = event.data;
@@ -75,7 +81,11 @@ export function useTranscriber(): Transcriber {
                 const fullText = completeMessage.data.text.trim();
 
                 if (fullText.length > 0) {
-                    historyRef.current.push(fullText);
+                    historyRef.current.push({
+                        text: fullText,
+                        timestamp: Date.now(),
+                        status: 'pending' // Initial status, AppContext will update this
+                    });
                 }
 
                 setTranscript({

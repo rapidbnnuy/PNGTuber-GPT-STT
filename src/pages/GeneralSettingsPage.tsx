@@ -1,3 +1,21 @@
+import {
+    IonContent,
+    IonHeader,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+    IonButtons,
+    IonMenuButton,
+    IonList,
+    IonListHeader,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonSelect,
+    IonSelectOption,
+    IonIcon
+} from '@ionic/react';
+import { hardwareChipOutline, speedometerOutline } from 'ionicons/icons';
 import { useAppContext } from '../context/AppContext';
 import { CHARACTERS } from '../utils/CharacterData';
 
@@ -12,101 +30,143 @@ export function GeneralSettingsPage() {
         transcriptionBackend,
         setTranscriptionBackend,
         selectedCharacterId,
-        setSelectedCharacterId
+        setSelectedCharacterId,
+        streamerBotUrl,
+        setStreamerBotUrl
     } = useAppContext();
 
     return (
-        <div className="max-w-4xl mx-auto p-6 text-white">
-            <h2 className="text-2xl font-bold mb-6 text-blue-400 border-b border-slate-700 pb-2">General Settings</h2>
+        <IonPage>
+            <IonHeader>
+                <IonToolbar>
+                    <IonButtons slot="start">
+                        <IonMenuButton />
+                    </IonButtons>
+                    <IonTitle>General Settings</IonTitle>
+                </IonToolbar>
+            </IonHeader>
 
-            <div className="space-y-8 bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <IonContent className="ion-padding">
 
-                {/* Transcription Backend Section */}
-                <section>
-                    <h4 className="text-md font-semibold text-purple-400 mb-4 uppercase tracking-wider text-xs">AI Engine</h4>
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                        <label className="block text-sm font-medium text-slate-300 mb-3">Model Selection</label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setTranscriptionBackend('webgpu')}
-                                className={`p-4 rounded-lg border text-left transition-all ${transcriptionBackend === 'webgpu'
-                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20'
-                                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
-                                    }`}
-                            >
-                                <div className="font-bold mb-1 text-lg">Local AI (WebGPU)</div>
-                                <div className="text-xs opacity-80 leading-relaxed">High Accuracy. Runs on GPU. Best for decent graphics cards (~2GB VRAM).</div>
-                            </button>
+                {/* AI Engine Selection - Card Style */}
+                <div className="mb-6 px-4">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 mt-2 pl-1">AI Engine</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* WebGPU Option */}
+                        <div
+                            onClick={() => setTranscriptionBackend('webgpu')}
+                            className={`cursor-pointer rounded-xl border-2 transition-all duration-200 relative overflow-hidden group ${transcriptionBackend === 'webgpu'
+                                ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20'
+                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-600'
+                                }`}
+                        >
+                            <div className="p-5">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className={`p-2 rounded-lg ${transcriptionBackend === 'webgpu' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                                        <IonIcon icon={hardwareChipOutline} />
+                                    </div>
+                                    <div className="font-bold text-lg text-white">Local AI (WebGPU)</div>
+                                </div>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    High accuracy transcription using your GPU. Best performance for most users.
+                                    <span className="block mt-1 text-xs opacity-70">Requires ~2GB VRAM.</span>
+                                </p>
+                            </div>
+                            {transcriptionBackend === 'webgpu' && (
+                                <div className="absolute top-0 right-0 p-1.5 bg-blue-500 rounded-bl-lg">
+                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                            )}
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={() => setTranscriptionBackend('cpu')}
-                                className={`p-4 rounded-lg border text-left transition-all ${transcriptionBackend === 'cpu'
-                                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/20'
-                                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
-                                    }`}
-                            >
-                                <div className="font-bold mb-1 text-lg">CPU Mode (Lightweight)</div>
-                                <div className="text-xs opacity-80 leading-relaxed">Zero GPU Usage. Uses 'tiny' model via WASM. Ideal for gaming on the same PC.</div>
-                            </button>
+                        {/* CPU Option */}
+                        <div
+                            onClick={() => setTranscriptionBackend('cpu')}
+                            className={`cursor-pointer rounded-xl border-2 transition-all duration-200 relative overflow-hidden group ${transcriptionBackend === 'cpu'
+                                ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/20'
+                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-600'
+                                }`}
+                        >
+                            <div className="p-5">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className={`p-2 rounded-lg ${transcriptionBackend === 'cpu' ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                                        <IonIcon icon={speedometerOutline} />
+                                    </div>
+                                    <div className="font-bold text-lg text-white">CPU Mode</div>
+                                </div>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    Lightweight 'tiny' model running via WASM. Zero GPU impact.
+                                    <span className="block mt-1 text-xs opacity-70">Ideal for heavy gaming loads.</span>
+                                </p>
+                            </div>
+                            {transcriptionBackend === 'cpu' && (
+                                <div className="absolute top-0 right-0 p-1.5 bg-purple-500 rounded-bl-lg">
+                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </section>
+                </div>
 
-                {/* Application Config */}
-                <section className="space-y-6">
-                    <h4 className="text-md font-semibold text-blue-400 mb-4 uppercase tracking-wider text-xs">Integration</h4>
+                <IonList inset={true}>
+                    <IonListHeader>
+                        <IonLabel>Integration</IonLabel>
+                    </IonListHeader>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Trigger Phrase (Regex Supported)</label>
-                        <input
-                            type="text"
+                    <IonItem>
+                        <IonInput
+                            label="Trigger Phrase"
+                            labelPlacement="stacked"
                             placeholder="e.g. Hey Rapid"
                             value={triggerPhrase}
-                            onChange={(e) => setTriggerPhrase(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-600"
+                            onIonInput={e => setTriggerPhrase(e.detail.value!)}
                         />
-                        <p className="text-xs text-slate-500 mt-2">Only text matching this phrase will be sent to Streamer.Bot.</p>
-                    </div>
+                    </IonItem>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Twitch User</label>
-                            <input
-                                type="text"
-                                placeholder="Username"
-                                value={twitchUsername}
-                                onChange={(e) => setTwitchUsername(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Character Profile</label>
-                            <select
-                                value={selectedCharacterId}
-                                onChange={(e) => setSelectedCharacterId(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                {CHARACTERS.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+                    <IonItem>
+                        <IonInput
+                            label="Twitch Username"
+                            labelPlacement="stacked"
+                            placeholder="Username"
+                            value={twitchUsername}
+                            onIonInput={e => setTwitchUsername(e.detail.value!)}
+                        />
+                    </IonItem>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Broadcaster ID (Internal)</label>
-                        <input
-                            type="text"
-                            placeholder="e.g. 44445592"
+                    <IonItem>
+                        <IonSelect
+                            label="Character Profile"
+                            value={selectedCharacterId}
+                            onIonChange={e => setSelectedCharacterId(e.detail.value)}
+                            interfaceOptions={{ cssClass: 'custom-select-interface' }}
+                        >
+                            {CHARACTERS.map(c => (
+                                <IonSelectOption key={c.id} value={c.id}>{c.name}</IonSelectOption>
+                            ))}
+                        </IonSelect>
+                    </IonItem>
+
+                    <IonItem>
+                        <IonInput
+                            label="Streamer.bot URL"
+                            labelPlacement="stacked"
+                            placeholder="http://127.0.0.1:7474"
+                            value={streamerBotUrl}
+                            onIonInput={e => setStreamerBotUrl(e.detail.value!)}
+                        />
+                    </IonItem>
+
+                    <IonItem>
+                        <IonInput
+                            label="Broadcaster ID"
+                            labelPlacement="stacked"
+                            placeholder="Numeric ID"
                             value={broadcastUserId}
-                            onChange={(e) => setBroadcastUserId(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                            onIonInput={e => setBroadcastUserId(e.detail.value!)}
                         />
-                    </div>
-                </section>
-            </div>
-        </div>
+                    </IonItem>
+                </IonList>
+            </IonContent>
+        </IonPage>
     );
 }

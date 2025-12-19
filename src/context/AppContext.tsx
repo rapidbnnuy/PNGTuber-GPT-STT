@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { useTranscriber, Transcriber } from "../hooks/useTranscriber";
 import { useVADRecorder, VADState } from "../hooks/useVADRecorder";
-import { CHARACTERS, CPH_ENDPOINT } from "../utils/CharacterData";
+import { CHARACTERS } from "../utils/CharacterData";
+import { getThemeVariables } from "../utils/ThemeData";
 
 // Helper: Convert linear 0-1 to dB (-60 to 0)
 const toDecibels = (linear: number) => {
@@ -46,6 +47,17 @@ interface AppContextType {
     setTranscriptionBackend: (val: 'webgpu' | 'cpu') => void;
     selectedCharacterId: string;
     setSelectedCharacterId: (val: string) => void;
+    streamerBotUrl: string;
+    setStreamerBotUrl: (val: string) => void;
+    isStreamerBotConnected: boolean;
+
+    // Theme State
+    themeMode: 'light' | 'dark';
+    setThemeMode: (val: 'light' | 'dark') => void;
+    themeColor: string;
+    setThemeColor: (val: string) => void;
+    showGradient: boolean;
+    setShowGradient: (val: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -65,12 +77,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [broadcastUserId, setBroadcastUserId] = useState<string>(() => localStorage.getItem("broadcastUserId") || "");
     const [transcriptionBackend, setTranscriptionBackend] = useState<'webgpu' | 'cpu'>(() => (localStorage.getItem("transcriptionBackend") as any) || 'webgpu');
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>(CHARACTERS[0].id);
+    const [streamerBotUrl, setStreamerBotUrl] = useState<string>(() => localStorage.getItem("streamerBotUrl") || "http://127.0.0.1:7474");
+    const [isStreamerBotConnected, setIsStreamerBotConnected] = useState(false);
+
+    // Theme State
+    const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => (localStorage.getItem("themeMode") as any) || 'dark');
+    const [themeColor, setThemeColor] = useState<string>(() => localStorage.getItem("themeColor") || 'blue');
+    const [showGradient, setShowGradient] = useState<boolean>(() => localStorage.getItem("showGradient") === 'true');
 
     // Persistence
     useEffect(() => { localStorage.setItem("triggerPhrase", triggerPhrase); }, [triggerPhrase]);
     useEffect(() => { localStorage.setItem("twitchUsername", twitchUsername); }, [twitchUsername]);
     useEffect(() => { localStorage.setItem("broadcastUserId", broadcastUserId); }, [broadcastUserId]);
     useEffect(() => { localStorage.setItem("transcriptionBackend", transcriptionBackend); }, [transcriptionBackend]);
+    useEffect(() => { localStorage.setItem("streamerBotUrl", streamerBotUrl); }, [streamerBotUrl]);
+
+    // Theme Persistence & Application
+    useEffect(() => {
+        localStorage.setItem("themeMode", themeMode);
+        localStorage.setItem("themeColor", themeColor);
+        localStorage.setItem("showGradient", String(showGradient));
+
+        const variables = getThemeVariables(themeMode, themeColor, showGradient);
+        Object.entries(variables).forEach(([key, value]) => {
+            document.documentElement.style.setProperty(key, value);
+        });
+
+        // Force dark/light class on body for Ionic utilities
+        document.body.classList.toggle('dark', themeMode === 'dark');
+    }, [themeMode, themeColor, showGradient]);
+
+    // Check Streamer.bot Connection
+    useEffect(() => {
+        const checkConnection = async () => {
+            try {
+                const response = await fetch(`${streamerBotUrl}/GetActions`);
+                const data = await response.json();
+                // Basic validation: Check if response has actions or actions array
+                if (data && (data.actions || Array.isArray(data))) {
+                    // Optionally verification: Check if expected actions exist in the response
+                    // For now, if we get a valid JSON response from GetActions, we assume connected.
+                    setIsStreamerBotConnected(true);
+                } else {
+                    setIsStreamerBotConnected(false);
+                }
+            } catch (e) {
+                console.warn("Streamer.bot connection failed:", e);
+                setIsStreamerBotConnected(false);
+            }
+        };
+
+        checkConnection();
+        const interval = setInterval(checkConnection, 10000); // Check every 10s
+        return () => clearInterval(interval);
+    }, [streamerBotUrl]);
 
     const [isPermissionsGranted, setIsPermissionsGranted] = useState(false);
     const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
@@ -95,7 +155,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const history = transcriber.output?.history || [];
         if (history.length > 0 && history.length > lastProcessedIndexRef.current + 1) {
             for (let i = lastProcessedIndexRef.current + 1; i < history.length; i++) {
-                const text = history[i];
+                const msg = history[i];
+                if (msg.status !== 'pending') continue; // Skip already processed
+
+                const text = msg.text;
 
                 // Regex Check
                 let isTriggered = false;
@@ -114,7 +177,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     const character = CHARACTERS.find(c => c.id === selectedCharacterId);
                     if (character) {
                         console.log(`[CPH] Triggered! Sending POST for ${character.name}...`);
-                        fetch(CPH_ENDPOINT, {
+                        fetch(`${streamerBotUrl}/DoAction`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
@@ -129,15 +192,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
                                     rawInput: text
                                 }
                             })
-                        }).catch(err => console.error("CPH Post Error:", err));
+                        })
+                            .then(() => {
+                                msg.status = 'completed';
+                            })
+                            .catch(err => {
+                                console.error("CPH Post Error:", err);
+                                msg.status = 'error';
+                            });
+                    } else {
+                        msg.status = 'error'; // Triggered but no character? Should rely on default?
                     }
+                } else {
+                    msg.status = 'ignored';
                 }
             }
             lastProcessedIndexRef.current = history.length - 1;
         } else if (history.length === 0) {
             lastProcessedIndexRef.current = -1;
         }
-    }, [transcriber.output?.history, triggerPhrase, twitchUsername, broadcastUserId, selectedCharacterId]);
+    }, [transcriber.output?.history, triggerPhrase, twitchUsername, broadcastUserId, selectedCharacterId, streamerBotUrl]);
 
     // VAD Hook
     const vad = useVADRecorder({
@@ -224,7 +298,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
             transcriptionBackend,
             setTranscriptionBackend,
             selectedCharacterId,
-            setSelectedCharacterId
+            setSelectedCharacterId,
+            streamerBotUrl,
+            setStreamerBotUrl,
+            isStreamerBotConnected,
+
+            themeMode, setThemeMode,
+            themeColor, setThemeColor,
+            showGradient, setShowGradient
         }}>
             {children}
         </AppContext.Provider>

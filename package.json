@@ -1,7 +1,7 @@
 {
-  "name": "whisper-webgpu",
+  "name": "pngtuber-gpt-stt",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -18,11 +18,14 @@
   "dependencies": {
     "@headlessui/react": "^2.1.8",
     "@huggingface/transformers": "^3.0.0-alpha.19",
+    "@ionic/react": "^8.7.14",
+    "@ionic/react-router": "^8.7.14",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.7.7",
+    "ionicons": "^8.0.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.11.0"
+    "react-router-dom": "^5.3.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
