@@ -32,6 +32,11 @@ interface SettingsModalProps {
     setTwitchUsername: (val: string) => void;
     broadcastUserId: string;
     setBroadcastUserId: (val: string) => void;
+
+    // Backend
+    transcriptionBackend: 'webgpu' | 'web_speech';
+    setTranscriptionBackend: (val: 'webgpu' | 'web_speech') => void;
+
     selectedCharacterId: string;
     setSelectedCharacterId: (val: string) => void;
 }
@@ -78,6 +83,41 @@ export function SettingsModal(props: SettingsModalProps) {
                                 </Dialog.Title>
 
                                 <div className="space-y-8">
+                                    {/* Transcription Backend Section */}
+                                    <section>
+                                        <h4 className="text-md font-semibold text-purple-400 mb-4 uppercase tracking-wider text-xs">Transcription Engine</h4>
+                                        <div className="mb-6">
+                                            <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                                                <label className="block text-sm font-medium text-slate-300 mb-3">Backend Technology</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => props.setTranscriptionBackend('webgpu')}
+                                                        className={`p-3 rounded-md border text-sm font-medium transition-all ${props.transcriptionBackend === 'webgpu'
+                                                                ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20'
+                                                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                                                            }`}
+                                                    >
+                                                        <div className="font-bold mb-1">Local AI (WebGPU)</div>
+                                                        <div className="text-[10px] opacity-80 leading-tight">High Accuracy. Uses GPU. Requires ~2GB VRAM.</div>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => props.setTranscriptionBackend('web_speech')}
+                                                        className={`p-3 rounded-md border text-sm font-medium transition-all ${props.transcriptionBackend === 'web_speech'
+                                                                ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/20'
+                                                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                                                            }`}
+                                                    >
+                                                        <div className="font-bold mb-1">Browser Native</div>
+                                                        <div className="text-[10px] opacity-80 leading-tight">Lightweight. Zero GPU. Uses OS/Chrome API.</div>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
                                     {/* Audio Section */}
                                     <section>
                                         <h4 className="text-md font-semibold text-green-400 mb-4 uppercase tracking-wider text-xs">Audio Settings</h4>
