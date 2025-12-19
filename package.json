@@ -59,6 +59,9 @@
       "output": "release",
       "buildResources": "assets"
     },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
     "win": {
       "target": [
         {
