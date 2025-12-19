@@ -1,15 +1,7 @@
-import { useEffect, useState, useRef } from "react";
-import { useTranscriber } from "../hooks/useTranscriber";
-import Transcript from "./Transcript";
-import { useVADRecorder } from "../hooks/useVADRecorder";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { useTranscriber, Transcriber } from "../hooks/useTranscriber";
+import { useVADRecorder, VADState } from "../hooks/useVADRecorder";
 import { CHARACTERS, CPH_ENDPOINT } from "../utils/CharacterData";
-
-import { Header } from "./layout/Header";
-import { SettingsModal } from "./modals/SettingsModal";
-
-export function AudioManager() {
-    return <AudioManagerInternal />;
-}
 
 // Helper: Convert linear 0-1 to dB (-60 to 0)
 const toDecibels = (linear: number) => {
@@ -18,16 +10,56 @@ const toDecibels = (linear: number) => {
     return Math.max(-60, db);
 };
 
-// Internal component that owns both hooks to link them
-function AudioManagerInternal() {
+interface AppContextType {
+    // Audio State
+    transcriber: Transcriber;
+    vadState: VADState;
+    volume: number;
+    currentDb: number;
+    toggleRecording: () => void;
+
+    // Settings State
+    audioInputDevices: MediaDeviceInfo[];
+    selectedDeviceId: string | undefined;
+    setSelectedDeviceId: (id: string) => void;
+    isPermissionsGranted: boolean;
+    requestPermissions: () => Promise<void>;
+
+    threshold: number;
+    thresholdDb: number;
+    setThreshold: (val: number) => void;
+
+    silenceDuration: number;
+    setSilenceDuration: (val: number) => void;
+
+    minSpeechDuration: number;
+    setMinSpeechDuration: (val: number) => void;
+
+    // App Config
+    triggerPhrase: string;
+    setTriggerPhrase: (val: string) => void;
+    twitchUsername: string;
+    setTwitchUsername: (val: string) => void;
+    broadcastUserId: string;
+    setBroadcastUserId: (val: string) => void;
+    transcriptionBackend: 'webgpu' | 'cpu';
+    setTranscriptionBackend: (val: 'webgpu' | 'cpu') => void;
+    selectedCharacterId: string;
+    setSelectedCharacterId: (val: string) => void;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+export function AppProvider({ children }: { children: ReactNode }) {
+    // --- State Initialization ---
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
 
     // VAD Settings
-    // Threshold now stored as linear but displayed as dB
     const [threshold, setThreshold] = useState(0.02);
     const [silenceDuration, setSilenceDuration] = useState(1500);
     const [minSpeechDuration, setMinSpeechDuration] = useState(100);
 
+    // App Data
     const [triggerPhrase, setTriggerPhrase] = useState<string>(() => localStorage.getItem("triggerPhrase") || "");
     const [twitchUsername, setTwitchUsername] = useState<string>(() => localStorage.getItem("twitchUsername") || "");
     const [broadcastUserId, setBroadcastUserId] = useState<string>(() => localStorage.getItem("broadcastUserId") || "");
@@ -43,27 +75,25 @@ function AudioManagerInternal() {
     const [isPermissionsGranted, setIsPermissionsGranted] = useState(false);
     const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
 
+    // --- Hooks ---
     const transcriber = useTranscriber();
     const lastProcessedIndexRef = useRef<number>(-1);
 
-    // Dynamic Device/Model Switching
+    // Dynamic Device Switching
     useEffect(() => {
         if (transcriptionBackend === 'cpu') {
             transcriber.setDevice('wasm');
             transcriber.setModel('onnx-community/whisper-tiny');
         } else {
             transcriber.setDevice('webgpu');
-            transcriber.setModel('onnx-community/whisper-small.en'); // Or DEFAULT_MODEL via import
+            transcriber.setModel('onnx-community/whisper-small.en');
         }
     }, [transcriptionBackend]);
 
-    // CPH Integration Effect
+    // CPH Integration
     useEffect(() => {
         const history = transcriber.output?.history || [];
-        // Only process new entries
         if (history.length > 0 && history.length > lastProcessedIndexRef.current + 1) {
-
-            // Loop through new messages
             for (let i = lastProcessedIndexRef.current + 1; i < history.length; i++) {
                 const text = history[i];
 
@@ -81,7 +111,6 @@ function AudioManagerInternal() {
                 }
 
                 if (isTriggered) {
-                    // Send to CPH
                     const character = CHARACTERS.find(c => c.id === selectedCharacterId);
                     if (character) {
                         console.log(`[CPH] Triggered! Sending POST for ${character.name}...`);
@@ -89,15 +118,12 @@ function AudioManagerInternal() {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                action: {
-                                    id: character.id,
-                                    name: character.name
-                                },
+                                action: { id: character.id, name: character.name },
                                 args: {
                                     userName: twitchUsername,
                                     broadcastUserId: broadcastUserId,
-                                    broadcaster: twitchUsername, // Mirror userName
-                                    broadcasterId: broadcastUserId, // Some actions might use this one
+                                    broadcaster: twitchUsername,
+                                    broadcasterId: broadcastUserId,
                                     currentGame: "Just Chatting",
                                     currentTitle: "Streamer.Bot Interaction",
                                     rawInput: text
@@ -107,18 +133,15 @@ function AudioManagerInternal() {
                     }
                 }
             }
-            // Update cursor
             lastProcessedIndexRef.current = history.length - 1;
         } else if (history.length === 0) {
-            lastProcessedIndexRef.current = -1; // Reset
+            lastProcessedIndexRef.current = -1;
         }
-
     }, [transcriber.output?.history, triggerPhrase, twitchUsername, broadcastUserId, selectedCharacterId]);
 
+    // VAD Hook
     const vad = useVADRecorder({
         onSpeechEnd: (buffer) => {
-            // Processing triggers automatically when speech ends
-            // Processing triggers automatically when speech ends
             transcriber.start(buffer);
         },
         threshold,
@@ -127,14 +150,16 @@ function AudioManagerInternal() {
         deviceId: selectedDeviceId
     });
 
-    // Metering
     const currentDb = toDecibels(vad.volume);
     const thresholdDb = toDecibels(threshold);
 
-    // Handle initial device listing
+    // Initial Device Listing
     useEffect(() => {
         const getDevices = async () => {
             try {
+                // Ensure permissions first if possible? enumerateDevices works without but labels are hidden
+                // We'll rely on global permission state or initial prompt elsewhere? 
+                // Actually the original logic tried to find inputs.
                 const devs = await navigator.mediaDevices.enumerateDevices();
                 const inputs = devs.filter(d => d.kind === 'audioinput');
                 setAudioInputDevices(inputs);
@@ -164,92 +189,52 @@ function AudioManagerInternal() {
         }
     };
 
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const toggleRecording = () => {
+        vad.vadState === 'idle' ? vad.start(selectedDeviceId) : vad.stop();
+    };
 
     return (
-        <div className="min-h-screen w-full bg-slate-900 text-white">
-            {/* 1. Header (Fixed Top) */}
-            <Header
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                vadState={vad.vadState}
-                onToggleRecording={() => {
-                    vad.vadState === 'idle' ? vad.start(selectedDeviceId) : vad.stop();
-                }}
-                isPermissionsGranted={isPermissionsGranted}
-            />
+        <AppContext.Provider value={{
+            transcriber,
+            vadState: vad.vadState,
+            volume: vad.volume,
+            currentDb,
+            toggleRecording,
 
-            {/* 2. Main Content (Scrollable by default) */}
-            <main className="w-full min-h-screen pt-20 pb-4 px-4 flex flex-col justify-between">
-                {/* Progress Bar (Fixed just below header) */}
-                {transcriber.progressItems.length > 0 && (
-                    <div className="fixed top-16 left-0 w-full z-40 bg-slate-800 h-1">
-                        {transcriber.progressItems.map((item) => (
-                            <div key={item.file} className="bg-blue-600 h-1 transition-all duration-200" style={{ width: `${item.progress}%` }}></div>
-                        ))}
-                    </div>
-                )}
+            audioInputDevices,
+            selectedDeviceId,
+            setSelectedDeviceId,
+            isPermissionsGranted,
+            requestPermissions,
 
-                {/* Content Container (Grows to push footer down) */}
-                <div className="w-full relative flex-1">
-                    {/* Overlay text if empty */}
-                    {/* Overlay text if empty */}
-                    {!transcriber.output && (
-                        <div className="flex items-center justify-center text-slate-500 py-20 pointer-events-none">
-                            <div className="text-center">
-                                <p className="text-lg font-semibold">Ready to Transcribe</p>
-                                <p className="text-sm opacity-60">Click 'Start Recording' in the top bar</p>
-                            </div>
-                        </div>
-                    )}
+            threshold,
+            thresholdDb,
+            setThreshold,
+            silenceDuration,
+            setSilenceDuration,
+            minSpeechDuration,
+            setMinSpeechDuration,
 
-                    <Transcript
-                        transcribedData={transcriber.output}
-                        triggerPhrase={triggerPhrase}
-                    />
-                </div>
-
-                {/* Footer */}
-                <div className="text-center text-zinc-600 text-xs mt-8">
-                    Powered by 🤗 Transformers.js ({transcriptionBackend === 'webgpu' ? 'WebGPU' : 'CPU/WASM'})
-                </div>
-            </main>
-
-            {/* 3. Settings Modal */}
-            <SettingsModal
-                isOpen={isSettingsOpen}
-                closeModal={() => setIsSettingsOpen(false)}
-
-                // Audio Config
-                audioInputDevices={audioInputDevices}
-                selectedDeviceId={selectedDeviceId}
-                setSelectedDeviceId={setSelectedDeviceId}
-                isPermissionsGranted={isPermissionsGranted}
-                requestPermissions={requestPermissions}
-
-                threshold={threshold}
-                thresholdDb={thresholdDb}
-                setThreshold={setThreshold}
-
-                silenceDuration={silenceDuration}
-                setSilenceDuration={setSilenceDuration}
-
-                minSpeechDuration={minSpeechDuration}
-                setMinSpeechDuration={setMinSpeechDuration}
-
-                currentDb={currentDb}
-
-                // App Config
-                triggerPhrase={triggerPhrase}
-                setTriggerPhrase={setTriggerPhrase}
-                twitchUsername={twitchUsername}
-                setTwitchUsername={setTwitchUsername}
-                broadcastUserId={broadcastUserId}
-                setBroadcastUserId={setBroadcastUserId}
-                transcriptionBackend={transcriptionBackend}
-                setTranscriptionBackend={setTranscriptionBackend}
-                selectedCharacterId={selectedCharacterId}
-                setSelectedCharacterId={setSelectedCharacterId}
-            />
-        </div>
+            triggerPhrase,
+            setTriggerPhrase,
+            twitchUsername,
+            setTwitchUsername,
+            broadcastUserId,
+            setBroadcastUserId,
+            transcriptionBackend,
+            setTranscriptionBackend,
+            selectedCharacterId,
+            setSelectedCharacterId
+        }}>
+            {children}
+        </AppContext.Provider>
     );
+}
+
+export function useAppContext() {
+    const context = useContext(AppContext);
+    if (!context) {
+        throw new Error("useAppContext must be used within an AppProvider");
+    }
+    return context;
 }
