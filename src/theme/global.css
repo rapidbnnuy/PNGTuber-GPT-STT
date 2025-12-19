@@ -20,3 +20,23 @@ ion-content::part(scroll) {
 ion-content::part(scroll)::-webkit-scrollbar {
     display: none;
 }
+
+/* --- Vibe Engine Enforcement --- */
+/* Force the theme font on the entire app */
+:root,
+body,
+ion-app {
+    font-family: var(--app-font) !important;
+}
+
+/* Override Ionic's internal border radius variables with our theme radius */
+:root {
+    --ion-border-radius: var(--app-radius);
+    --ion-border-radius-small: calc(var(--app-radius) / 2);
+    --ion-border-radius-large: calc(var(--app-radius) * 1.5);
+}
+
+/* Ensure Tailwind's font-sans is prioritized if conflicting */
+.font-sans {
+    font-family: var(--app-font) !important;
+}

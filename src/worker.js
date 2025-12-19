@@ -1,5 +1,9 @@
 
-import { pipeline, WhisperTextStreamer } from "@huggingface/transformers";
+
+import { pipeline, WhisperTextStreamer, env } from "@huggingface/transformers";
+
+// Skip local checks for now
+env.allowLocalModels = false;
 
 // Define model factories
 // Ensures only one model is created of each type
@@ -15,6 +19,14 @@ class PipelineFactory {
 
     static async getInstance(progress_callback = null, device = "webgpu") {
         if (this.instance === null) {
+
+            if (device === 'wasm') {
+                env.backends.onnx.wasm.numThreads = 4;
+                console.log("Worker: Forcing CPU (WASM) execution with 4 threads.");
+            } else {
+                console.log("Worker: Using WebGPU execution.");
+            }
+
             this.instance = await pipeline(this.task, this.model, {
                 dtype: {
                     encoder_model:

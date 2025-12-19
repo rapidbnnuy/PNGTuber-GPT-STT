@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import { useTranscriber, Transcriber } from "../hooks/useTranscriber";
 import { useVADRecorder, VADState } from "../hooks/useVADRecorder";
 import { CHARACTERS } from "../utils/CharacterData";
-import { getThemeVariables } from "../utils/ThemeData";
+import { generateTheme } from "../theme/ThemeEngine";
 
 // Helper: Convert linear 0-1 to dB (-60 to 0)
 const toDecibels = (linear: number) => {
@@ -64,9 +64,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     // --- State Initialization ---
+    // Audio & Device State
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
-
-    // VAD Settings
     const [threshold, setThreshold] = useState(0.02);
     const [silenceDuration, setSilenceDuration] = useState(1500);
     const [minSpeechDuration, setMinSpeechDuration] = useState(100);
@@ -85,26 +84,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [themeColor, setThemeColor] = useState<string>(() => localStorage.getItem("themeColor") || 'blue');
     const [showGradient, setShowGradient] = useState<boolean>(() => localStorage.getItem("showGradient") === 'true');
 
-    // Persistence
+    // --- Persistence Effects ---
     useEffect(() => { localStorage.setItem("triggerPhrase", triggerPhrase); }, [triggerPhrase]);
     useEffect(() => { localStorage.setItem("twitchUsername", twitchUsername); }, [twitchUsername]);
     useEffect(() => { localStorage.setItem("broadcastUserId", broadcastUserId); }, [broadcastUserId]);
     useEffect(() => { localStorage.setItem("transcriptionBackend", transcriptionBackend); }, [transcriptionBackend]);
     useEffect(() => { localStorage.setItem("streamerBotUrl", streamerBotUrl); }, [streamerBotUrl]);
 
-    // Theme Persistence & Application
+    // Theme Persistence & Application (The First Class Integration)
     useEffect(() => {
         localStorage.setItem("themeMode", themeMode);
         localStorage.setItem("themeColor", themeColor);
         localStorage.setItem("showGradient", String(showGradient));
 
-        const variables = getThemeVariables(themeMode, themeColor, showGradient);
+        // Use the new Engine
+        const variables = generateTheme(themeColor, themeMode, showGradient);
+
+        // Apply to Root
         Object.entries(variables).forEach(([key, value]) => {
             document.documentElement.style.setProperty(key, value);
         });
 
-        // Force dark/light class on body for Ionic utilities
+        // Force Ionic Body Class
         document.body.classList.toggle('dark', themeMode === 'dark');
+
     }, [themeMode, themeColor, showGradient]);
 
     // Check Streamer.bot Connection
@@ -115,14 +118,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 const data = await response.json();
                 // Basic validation: Check if response has actions or actions array
                 if (data && (data.actions || Array.isArray(data))) {
-                    // Optionally verification: Check if expected actions exist in the response
-                    // For now, if we get a valid JSON response from GetActions, we assume connected.
                     setIsStreamerBotConnected(true);
                 } else {
                     setIsStreamerBotConnected(false);
                 }
             } catch (e) {
-                console.warn("Streamer.bot connection failed:", e);
+                // console.warn("Streamer.bot connection failed:", e); // Suppress log spam
                 setIsStreamerBotConnected(false);
             }
         };

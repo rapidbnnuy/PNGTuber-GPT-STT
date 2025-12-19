@@ -10,7 +10,8 @@ import { ThemeSettingsPage } from './pages/ThemeSettingsPage';
 
 /* Theme variables */
 import './components/Menu.css';
-import './theme/global.css';
+import './theme/theme.css'; // The new First-Class Theme System
+import './theme/global.css'; // Global Utilities & Scrollbars
 
 setupIonicReact();
 

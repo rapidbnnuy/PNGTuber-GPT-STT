@@ -1,0 +1,111 @@
+/* 
+  THEME.CSS
+  The First-Class Integration Layer
+*/
+
+/* 1. Global Reset & Enforcement */
+:root,
+body,
+ion-app {
+    font-family: var(--app-font-family) !important;
+    color: var(--app-text);
+}
+
+/* 2. Ionic Shadow DOM Piercing (The "Deep Link") */
+/* Force all Ionic textual elements to inherit the global font */
+ion-item,
+ion-label,
+ion-input,
+ion-textarea,
+ion-button,
+ion-segment-button,
+ion-title,
+ion-note,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--app-font-family) !important;
+}
+
+/* 2a. Typography Hierarchy & Sizing */
+h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+p,
+ion-label,
+ion-input,
+ion-textarea {
+    font-size: 1rem;
+}
+
+ion-note {
+    font-size: 0.875rem !important;
+    opacity: 0.8;
+}
+
+.text-xs {
+    font-size: 0.75rem !important;
+}
+
+.text-sm {
+    font-size: 0.875rem !important;
+}
+
+/* Force backgrounds to handle the gradient properly */
+ion-content {
+    --background: var(--custom-background-image, var(--app-background));
+}
+
+/* Sidebar Specifics */
+ion-menu::part(container) {
+    border-radius: 0 var(--app-radius-xl) var(--app-radius-xl) 0;
+    /* Only curve the right side */
+    overflow: hidden;
+}
+
+/* 3. Utility Classes (Helpers) */
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.tracking-wide {
+    letter-spacing: 0.025em;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+/* 4. Scrollbar Hiding (Clean Look) */
+::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

@@ -87,20 +87,19 @@ export function AudioSettingsPage() {
                         <div className="w-full py-2">
                             <div className="flex justify-between items-center mb-1">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium" style={{ color: 'var(--ion-text-color)' }}>Voice Gate Threshold</span>
-                                    <span className="text-xs" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Microphone sensitivity. Lower is more sensitive.</span>
+                                    <span className="text-sm font-medium text-text">Voice Gate Threshold</span>
+                                    <span className="text-xs text-muted">Microphone sensitivity. Lower is more sensitive.</span>
                                 </div>
-                                <span className="text-xs px-2 py-1 rounded font-mono" style={{ backgroundColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))', color: 'var(--ion-text-color)' }}>{thresholdDb.toFixed(0)} dB</span>
+                                <span className="text-xs px-2 py-1 rounded font-mono bg-border text-text">{thresholdDb.toFixed(0)} dB</span>
                             </div>
                             <input
                                 type="range" min="-60" max="0" step="1"
-                                className="w-full h-2 rounded-lg appearance-none cursor-pointer mb-3"
-                                style={{ backgroundColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))' }}
+                                className="w-full h-2 rounded-theme appearance-none cursor-pointer mb-3 bg-border"
                                 value={thresholdDb}
                                 onChange={e => setThreshold(Math.pow(10, parseFloat(e.target.value) / 20))}
                             />
                             {/* Visual Meter */}
-                            <div className="w-full h-3 rounded-full overflow-hidden flex items-center relative border" style={{ backgroundColor: 'var(--ion-color-step-100, rgba(0,0,0,0.2))', borderColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))' }}>
+                            <div className="w-full h-3 rounded-theme-xs overflow-hidden flex items-center relative border border-border" style={{ backgroundColor: 'var(--ion-color-step-100, rgba(0,0,0,0.2))' }}>
                                 <div
                                     className={`h-full transition-all duration-75 ease-out ${currentDb > thresholdDb ? 'bg-green-500' : 'bg-green-600/30'}`}
                                     style={{ width: `${dbToPercent(currentDb)}%` }}
@@ -117,10 +116,10 @@ export function AudioSettingsPage() {
                         <div className="w-full py-2">
                             <div className="flex justify-between items-center mb-1">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium" style={{ color: 'var(--ion-text-color)' }}>VAD Silence Timeout</span>
-                                    <span className="text-xs" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Wait time after speech stops before processing.</span>
+                                    <span className="text-sm font-medium text-text">VAD Silence Timeout</span>
+                                    <span className="text-xs text-muted">Wait time after speech stops before processing.</span>
                                 </div>
-                                <span className="text-xs px-2 py-1 rounded font-mono" style={{ backgroundColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))', color: 'var(--ion-text-color)' }}>{silenceDuration} ms</span>
+                                <span className="text-xs px-2 py-1 rounded font-mono bg-border text-text">{silenceDuration} ms</span>
                             </div>
                             <IonRange
                                 min={500} max={5000} step={100}
@@ -134,10 +133,10 @@ export function AudioSettingsPage() {
                         <div className="w-full py-2">
                             <div className="flex justify-between items-center mb-1">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium" style={{ color: 'var(--ion-text-color)' }}>Min Speech Duration</span>
-                                    <span className="text-xs" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Ignore sounds shorter than this (clicks, pops).</span>
+                                    <span className="text-sm font-medium text-text">Min Speech Duration</span>
+                                    <span className="text-xs text-muted">Ignore sounds shorter than this (clicks, pops).</span>
                                 </div>
-                                <span className="text-xs px-2 py-1 rounded font-mono" style={{ backgroundColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))', color: 'var(--ion-text-color)' }}>{minSpeechDuration} ms</span>
+                                <span className="text-xs px-2 py-1 rounded font-mono bg-border text-text">{minSpeechDuration} ms</span>
                             </div>
                             <IonRange
                                 min={0} max={500} step={10}

@@ -46,7 +46,7 @@ export default function Modal({
                             leaveFrom='opacity-100 scale-100'
                             leaveTo='opacity-0 scale-95'
                         >
-                            <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all'>
+                            <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-theme-xl bg-surface p-6 text-left align-middle shadow-xl transition-all'>
                                 <Dialog.Title
                                     as='h3'
                                     className='text-lg font-medium leading-6 text-gray-900'
@@ -62,15 +62,13 @@ export default function Modal({
                                         <button
                                             type='button'
                                             disabled={!submitEnabled}
-                                            className={`inline-flex ml-4 justify-center rounded-md border border-transparent ${
-                                                submitEnabled
+                                            className={`inline-flex ml-4 justify-center rounded-md border border-transparent ${submitEnabled
                                                     ? "bg-indigo-600"
                                                     : "bg-grey-300"
-                                            } px-4 py-2 text-sm font-medium text-indigo-100 ${
-                                                submitEnabled
+                                                } px-4 py-2 text-sm font-medium text-indigo-100 ${submitEnabled
                                                     ? "hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
                                                     : ""
-                                            } transition-all duration-300`}
+                                                } transition-all duration-300`}
                                             onClick={onSubmit}
                                         >
                                             {submitText}

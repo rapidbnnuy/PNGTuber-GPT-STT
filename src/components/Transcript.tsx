@@ -38,18 +38,18 @@ export default function Transcript({ transcribedData }: Props) {
                     const status = msg.status || 'pending';
 
                     // Determine styles based on status
-                    let containerStyle = 'border-slate-700/50 bg-slate-800/80';
-                    let badgeColor = 'text-slate-400 bg-slate-900/50';
+                    let containerStyle = 'border-border bg-surface/80';
+                    let badgeColor = 'text-muted bg-surface/50';
                     let badgeText = 'IGNORED';
                     let outlineStyle = '';
 
                     if (status === 'completed') {
-                        containerStyle = 'border-green-500 bg-slate-800/80 shadow-[0_0_15px_rgba(34,197,94,0.15)]';
+                        containerStyle = 'border-green-500 bg-surface/80 shadow-[0_0_15px_rgba(34,197,94,0.15)]';
                         badgeColor = 'text-green-400 bg-green-900/30 border border-green-500/30';
                         badgeText = 'COMPLETED';
                         outlineStyle = 'ring-1 ring-green-500/50';
                     } else if (status === 'error') {
-                        containerStyle = 'border-red-500 bg-slate-800/80 shadow-[0_0_15px_rgba(239,68,68,0.15)]';
+                        containerStyle = 'border-red-500 bg-surface/80 shadow-[0_0_15px_rgba(239,68,68,0.15)]';
                         badgeColor = 'text-red-400 bg-red-900/30 border border-red-500/30';
                         badgeText = 'ERROR';
                         outlineStyle = 'ring-1 ring-red-500/50';

@@ -13,7 +13,7 @@ import {
 } from '@ionic/react';
 import { moonOutline, sunnyOutline, colorPaletteOutline } from 'ionicons/icons';
 import { useAppContext } from '../context/AppContext';
-import { THEME_PRESETS } from '../utils/ThemeData';
+import { THEME_VIBES } from '../theme/ThemeEngine';
 
 export function ThemeSettingsPage() {
     const {
@@ -37,14 +37,14 @@ export function ThemeSettingsPage() {
 
                 {/* --- Mode Selection --- */}
                 <div className="mb-8 px-2">
-                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 pl-1" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Appearance</h3>
-                    <div className="p-1 rounded-xl flex" style={{ backgroundColor: 'var(--ion-card-background)', border: '1px solid var(--ion-color-step-150, rgba(0,0,0,0.1))' }}>
+                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 pl-1 text-muted">Appearance</h3>
+                    <div className="p-1 rounded-xl flex bg-surface border border-border">
                         <button
                             onClick={() => setThemeMode('light')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all`}
                             style={{
-                                backgroundColor: themeMode === 'light' ? 'var(--ion-color-light)' : 'transparent',
-                                color: themeMode === 'light' ? 'var(--ion-color-light-contrast)' : 'var(--ion-text-color)',
+                                backgroundColor: themeMode === 'light' ? 'var(--app-text)' : 'transparent',
+                                color: themeMode === 'light' ? 'var(--app-background)' : 'var(--app-text-muted)',
                                 opacity: themeMode === 'light' ? 1 : 0.6
                             }}
                         >
@@ -55,8 +55,8 @@ export function ThemeSettingsPage() {
                             onClick={() => setThemeMode('dark')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all`}
                             style={{
-                                backgroundColor: themeMode === 'dark' ? 'var(--ion-color-dark)' : 'transparent',
-                                color: themeMode === 'dark' ? 'var(--ion-color-dark-contrast)' : 'var(--ion-text-color)',
+                                backgroundColor: themeMode === 'dark' ? 'var(--app-text)' : 'transparent',
+                                color: themeMode === 'dark' ? 'var(--app-background)' : 'var(--app-text-muted)',
                                 opacity: themeMode === 'dark' ? 1 : 0.6
                             }}
                         >
@@ -66,44 +66,62 @@ export function ThemeSettingsPage() {
                     </div>
                 </div>
 
-                {/* --- Color Presets --- */}
+                {/* --- Vibe Themes (Rich Preview) --- */}
                 <div className="mb-8 px-2">
-                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 pl-1" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Accent Color</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        {THEME_PRESETS.map(preset => (
-                            <div
-                                key={preset.id}
-                                onClick={() => setThemeColor(preset.id)}
-                                className={`cursor-pointer relative overflow-hidden rounded-xl p-4 border-2 transition-all duration-200`}
-                                style={{
-                                    backgroundColor: themeColor === preset.id ? 'var(--ion-card-background)' : 'rgba(var(--ion-color-step-950, 0,0,0), 0.05)',
-                                    borderColor: themeColor === preset.id ? preset.primary : 'transparent',
-                                    boxShadow: themeColor === preset.id ? `0 4px 12px -2px ${preset.primary}40` : 'none'
-                                }}
-                            >
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full shadow-inner" style={{ background: preset.primary }}></div>
-                                    <span className="text-xs font-medium" style={{ color: 'var(--ion-text-color)' }}>
-                                        {preset.name}
-                                    </span>
+                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 pl-1 text-muted">Theme Vibes</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {THEME_VIBES.map(preset => {
+                            const isActive = themeColor === preset.id;
+                            return (
+                                <div
+                                    key={preset.id}
+                                    onClick={() => setThemeColor(preset.id)}
+                                    className={`cursor-pointer relative overflow-hidden p-0 border-2 transition-all duration-300 group`}
+                                    style={{
+                                        fontFamily: preset.fontFamily,
+                                        borderRadius: `${preset.radiusBase}px`,
+                                        backgroundColor: isActive ? 'var(--app-surface)' : 'rgba(var(--ion-color-step-950, 0,0,0), 0.05)',
+                                        borderColor: isActive ? preset.primary : 'transparent',
+                                        boxShadow: isActive ? `0 4px 20px -4px ${preset.primary}40` : 'none'
+                                    }}
+                                >
+                                    {/* Preview Header */}
+                                    <div className="px-4 py-3 border-b flex justify-between items-center" style={{ borderColor: isActive ? `${preset.primary}20` : 'transparent', backgroundColor: isActive ? `${preset.primary}10` : 'transparent' }}>
+                                        <span className="font-bold text-sm" style={{ color: isActive ? preset.primary : 'var(--app-text)' }}>{preset.name}</span>
+                                        {isActive && <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: preset.primary }}></div>}
+                                    </div>
+
+                                    {/* Preview Content */}
+                                    <div className="p-4">
+                                        <div className="text-xs opacity-70 mb-2 uppercase tracking-wide" style={{ color: 'var(--app-text)' }}>{preset.description}</div>
+                                        <div className="flex gap-2 mb-3">
+                                            <div className="h-2 w-16 rounded-full opacity-20" style={{ backgroundColor: preset.primary }}></div>
+                                            <div className="h-2 w-8 rounded-full opacity-20" style={{ backgroundColor: preset.secondary }}></div>
+                                        </div>
+                                        <button className="text-xs px-3 py-1.5 font-medium transition-colors"
+                                            style={{
+                                                backgroundColor: preset.primary,
+                                                color: '#fff',
+                                                borderRadius: `${preset.radiusBase}px`
+                                            }}>
+                                            Select
+                                        </button>
+                                    </div>
                                 </div>
-                                {themeColor === preset.id && (
-                                    <div className="absolute top-2 right-2 w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: preset.primary }}></div>
-                                )}
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* --- Effects --- */}
                 <div className="mb-6 px-2">
-                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 pl-1" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Effects</h3>
-                    <div className="rounded-xl overflow-hidden border" style={{ backgroundColor: 'var(--ion-card-background)', borderColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))' }}>
+                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 pl-1 text-muted">Effects</h3>
+                    <div className="rounded-xl overflow-hidden border bg-surface border-border">
                         <IonItem lines="none" style={{ '--background': 'transparent' }}>
-                            <IonIcon slot="start" icon={colorPaletteOutline} style={{ color: 'var(--ion-text-color)', opacity: 0.6 }} />
+                            <IonIcon slot="start" icon={colorPaletteOutline} className="text-muted" />
                             <IonLabel>
-                                <h2 className="font-medium" style={{ color: 'var(--ion-text-color)' }}>Vibrant Gradients</h2>
-                                <p className="text-xs mt-1" style={{ color: 'var(--ion-text-color)', opacity: 0.6 }}>Add colorful background gradients based on your theme.</p>
+                                <h2 className="font-medium text-text">Vibrant Gradients</h2>
+                                <p className="text-xs mt-1 text-muted">Add colorful background gradients based on your theme.</p>
                             </IonLabel>
                             <IonToggle
                                 checked={showGradient}

@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './css/index.css';
-import './theme/variables.css';
 import { setupIonicReact } from '@ionic/react';
 
 /* Core CSS required for Ionic components to work properly */

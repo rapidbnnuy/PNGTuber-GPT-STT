@@ -58,17 +58,19 @@ const Menu: React.FC = () => {
     return (
         <IonMenu contentId="main" type="overlay">
             <IonContent>
-                <div className="flex flex-col h-full bg-transparent">
+                <div className="flex flex-col h-full bg-background">
                     {/* Header & Main Nav */}
                     <div className="pt-2">
                         <IonList id="inbox-list" lines="none" style={{ background: 'transparent' }}>
-                            <IonListHeader>PNGTuber-GPT-STT</IonListHeader>
-                            <IonNote className="mb-6">v{pkg.version}</IonNote>
+                            <div className="pl-5 mb-6">
+                                <h1 className="text-xl font-bold text-primary">PNGTuber-GPT-STT</h1>
+                                <IonNote className="text-xs opacity-60 pl-0.5">v{pkg.version}</IonNote>
+                            </div>
 
                             {mainPages.map((appPage, index) => (
                                 <IonMenuToggle key={index} autoHide={false}>
                                     <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
-                                        <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
+                                        <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} color="primary" />
                                         <IonLabel>{appPage.title}</IonLabel>
                                     </IonItem>
                                 </IonMenuToggle>
@@ -82,11 +84,11 @@ const Menu: React.FC = () => {
                     {/* Settings Nav */}
                     <div className="pb-4">
                         <IonList lines="none" style={{ background: 'transparent' }}>
-                            <IonListHeader className="uppercase text-xs font-bold tracking-wider text-slate-500 mb-2 pl-5">Settings</IonListHeader>
+                            <IonListHeader className="uppercase text-xs font-bold tracking-wider text-muted mb-2 pl-5">Settings</IonListHeader>
                             {settingsPages.map((appPage, index) => (
                                 <IonMenuToggle key={`settings-${index}`} autoHide={false}>
                                     <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
-                                        <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
+                                        <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} color="primary" />
                                         <IonLabel>{appPage.title}</IonLabel>
                                     </IonItem>
                                 </IonMenuToggle>

@@ -15,7 +15,9 @@
     "electron:dev": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"npm run electron\"",
     "electron:build": "vite build && electron-builder"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@ctrl/tinycolor": "^4.2.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@headlessui/react": "^2.1.8",
