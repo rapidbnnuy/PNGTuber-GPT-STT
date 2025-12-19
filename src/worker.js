@@ -1,4 +1,4 @@
- 
+
 import { pipeline, WhisperTextStreamer } from "@huggingface/transformers";
 
 // Define model factories
@@ -13,9 +13,9 @@ class PipelineFactory {
         this.model = model;
     }
 
-    static async getInstance(progress_callback = null) {
+    static async getInstance(progress_callback = null, device = "webgpu") {
         if (this.instance === null) {
-            this.instance = pipeline(this.task, this.model, {
+            this.instance = await pipeline(this.task, this.model, {
                 dtype: {
                     encoder_model:
                         this.model === "onnx-community/whisper-large-v3-turbo"
@@ -23,7 +23,7 @@ class PipelineFactory {
                             : "fp32",
                     decoder_model_merged: "q4", // or 'fp32' ('fp16' is broken)
                 },
-                device: "webgpu",
+                device: device,
                 progress_callback,
             });
         }
@@ -52,13 +52,16 @@ class AutomaticSpeechRecognitionPipelineFactory extends PipelineFactory {
     static model = null;
 }
 
-const transcribe = async ({ audio, model, subtask, language }) => {
+const transcribe = async ({ audio, model, subtask, language, device }) => {
     const isDistilWhisper = model.startsWith("distil-whisper/");
 
     const p = AutomaticSpeechRecognitionPipelineFactory;
-    if (p.model !== model) {
+
+    // Check if model OR device changed
+    if (p.model !== model || p.device !== device) {
         // Invalidate model if different
         p.model = model;
+        p.device = device;
 
         if (p.instance !== null) {
             (await p.getInstance()).dispose();
@@ -69,7 +72,7 @@ const transcribe = async ({ audio, model, subtask, language }) => {
     // Load transcriber model
     const transcriber = await p.getInstance((data) => {
         self.postMessage(data);
-    });
+    }, device);
 
     const time_precision =
         transcriber.processor.feature_extractor.config.chunk_length /

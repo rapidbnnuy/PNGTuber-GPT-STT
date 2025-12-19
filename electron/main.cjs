@@ -16,6 +16,14 @@ function createWindow() {
     // Remove menu bar for cleaner look (optional, but requested "client facing")
     win.setMenuBarVisibility(false);
 
+    // Permission Handler
+    win.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+        return true;
+    });
+    win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+        callback(true);
+    });
+
     // Load app
     if (process.env.NODE_ENV === 'development' || process.env.BROWSER === 'none') {
         win.loadURL('http://localhost:5173');

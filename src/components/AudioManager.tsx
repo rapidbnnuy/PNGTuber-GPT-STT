@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranscriber } from "../hooks/useTranscriber";
-import { useWebSpeech } from "../hooks/useWebSpeech";
 import Transcript from "./Transcript";
 import { useVADRecorder } from "../hooks/useVADRecorder";
 import { CHARACTERS, CPH_ENDPOINT } from "../utils/CharacterData";
@@ -32,7 +31,7 @@ function AudioManagerInternal() {
     const [triggerPhrase, setTriggerPhrase] = useState<string>(() => localStorage.getItem("triggerPhrase") || "");
     const [twitchUsername, setTwitchUsername] = useState<string>(() => localStorage.getItem("twitchUsername") || "");
     const [broadcastUserId, setBroadcastUserId] = useState<string>(() => localStorage.getItem("broadcastUserId") || "");
-    const [transcriptionBackend, setTranscriptionBackend] = useState<'webgpu' | 'web_speech'>(() => (localStorage.getItem("transcriptionBackend") as any) || 'webgpu');
+    const [transcriptionBackend, setTranscriptionBackend] = useState<'webgpu' | 'cpu'>(() => (localStorage.getItem("transcriptionBackend") as any) || 'webgpu');
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>(CHARACTERS[0].id);
 
     // Persistence
@@ -45,17 +44,22 @@ function AudioManagerInternal() {
     const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
 
     const transcriber = useTranscriber();
-    const webSpeech = useWebSpeech({ continuous: true, lang: 'en-US' });
     const lastProcessedIndexRef = useRef<number>(-1);
 
-    // Unify History
-    const activeHistory = transcriptionBackend === 'webgpu'
-        ? (transcriber.output?.history || [])
-        : webSpeech.history;
+    // Dynamic Device/Model Switching
+    useEffect(() => {
+        if (transcriptionBackend === 'cpu') {
+            transcriber.setDevice('wasm');
+            transcriber.setModel('onnx-community/whisper-tiny');
+        } else {
+            transcriber.setDevice('webgpu');
+            transcriber.setModel('onnx-community/whisper-small.en'); // Or DEFAULT_MODEL via import
+        }
+    }, [transcriptionBackend]);
 
     // CPH Integration Effect
     useEffect(() => {
-        const history = activeHistory;
+        const history = transcriber.output?.history || [];
         // Only process new entries
         if (history.length > 0 && history.length > lastProcessedIndexRef.current + 1) {
 
@@ -108,19 +112,14 @@ function AudioManagerInternal() {
         } else if (history.length === 0) {
             lastProcessedIndexRef.current = -1; // Reset
         }
-    }, [activeHistory, triggerPhrase, twitchUsername, broadcastUserId, selectedCharacterId]);
+
+    }, [transcriber.output?.history, triggerPhrase, twitchUsername, broadcastUserId, selectedCharacterId]);
 
     const vad = useVADRecorder({
         onSpeechEnd: (buffer) => {
             // Processing triggers automatically when speech ends
-            if (transcriptionBackend === 'webgpu') {
-                transcriber.start(buffer);
-            } else {
-                // For Web Speech, we don't need audio buffer, 
-                // but we should ensure it's "listening" if not continuous. 
-                // Since we use continuous=true, it's always running when active.
-                console.log("VAD Speech End (Web Speech Mode) - No Action Needed");
-            }
+            // Processing triggers automatically when speech ends
+            transcriber.start(buffer);
         },
         threshold,
         silenceDuration,
@@ -172,13 +171,9 @@ function AudioManagerInternal() {
             {/* 1. Header (Fixed Top) */}
             <Header
                 onOpenSettings={() => setIsSettingsOpen(true)}
-                vadState={transcriptionBackend === 'webgpu' ? vad.vadState : (webSpeech.isListening ? 'recording' : 'idle')}
+                vadState={vad.vadState}
                 onToggleRecording={() => {
-                    if (transcriptionBackend === 'webgpu') {
-                        vad.vadState === 'idle' ? vad.start(selectedDeviceId) : vad.stop();
-                    } else {
-                        webSpeech.isListening ? webSpeech.stop() : webSpeech.start();
-                    }
+                    vad.vadState === 'idle' ? vad.start(selectedDeviceId) : vad.stop();
                 }}
                 isPermissionsGranted={isPermissionsGranted}
             />
@@ -198,7 +193,7 @@ function AudioManagerInternal() {
                 <div className="w-full relative flex-1">
                     {/* Overlay text if empty */}
                     {/* Overlay text if empty */}
-                    {!activeHistory.length && ( // Check length instead of object nullity
+                    {!transcriber.output && (
                         <div className="flex items-center justify-center text-slate-500 py-20 pointer-events-none">
                             <div className="text-center">
                                 <p className="text-lg font-semibold">Ready to Transcribe</p>
@@ -208,16 +203,14 @@ function AudioManagerInternal() {
                     )}
 
                     <Transcript
-                        transcribedData={transcriptionBackend === 'webgpu'
-                            ? transcriber.output
-                            : { history: webSpeech.history, isBusy: webSpeech.isListening, text: webSpeech.transcript }}
+                        transcribedData={transcriber.output}
                         triggerPhrase={triggerPhrase}
                     />
                 </div>
 
                 {/* Footer */}
                 <div className="text-center text-zinc-600 text-xs mt-8">
-                    Powered by {transcriptionBackend === 'webgpu' ? '🤗 Transformers.js (WebGPU)' : 'Web Speech API'}
+                    Powered by 🤗 Transformers.js ({transcriptionBackend === 'webgpu' ? 'WebGPU' : 'CPU/WASM'})
                 </div>
             </main>
 

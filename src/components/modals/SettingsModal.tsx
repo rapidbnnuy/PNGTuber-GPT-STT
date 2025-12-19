@@ -34,8 +34,8 @@ interface SettingsModalProps {
     setBroadcastUserId: (val: string) => void;
 
     // Backend
-    transcriptionBackend: 'webgpu' | 'web_speech';
-    setTranscriptionBackend: (val: 'webgpu' | 'web_speech') => void;
+    transcriptionBackend: 'webgpu' | 'cpu';
+    setTranscriptionBackend: (val: 'webgpu' | 'cpu') => void;
 
     selectedCharacterId: string;
     setSelectedCharacterId: (val: string) => void;
@@ -94,8 +94,8 @@ export function SettingsModal(props: SettingsModalProps) {
                                                         type="button"
                                                         onClick={() => props.setTranscriptionBackend('webgpu')}
                                                         className={`p-3 rounded-md border text-sm font-medium transition-all ${props.transcriptionBackend === 'webgpu'
-                                                                ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20'
-                                                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                                                            ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20'
+                                                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
                                                             }`}
                                                     >
                                                         <div className="font-bold mb-1">Local AI (WebGPU)</div>
@@ -104,14 +104,14 @@ export function SettingsModal(props: SettingsModalProps) {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => props.setTranscriptionBackend('web_speech')}
-                                                        className={`p-3 rounded-md border text-sm font-medium transition-all ${props.transcriptionBackend === 'web_speech'
+                                                        onClick={() => props.setTranscriptionBackend('cpu')}
+                                                        className={`p-3 rounded-md border text-sm font-medium transition-all ${props.transcriptionBackend === 'cpu'
                                                                 ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/20'
                                                                 : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
                                                             }`}
                                                     >
-                                                        <div className="font-bold mb-1">Browser Native</div>
-                                                        <div className="text-[10px] opacity-80 leading-tight">Lightweight. Zero GPU. Uses OS/Chrome API.</div>
+                                                        <div className="font-bold mb-1">CPU Mode (Lightweight)</div>
+                                                        <div className="text-[10px] opacity-80 leading-tight">Zero GPU. Uses 'tiny' model. Works offline.</div>
                                                     </button>
                                                 </div>
                                             </div>

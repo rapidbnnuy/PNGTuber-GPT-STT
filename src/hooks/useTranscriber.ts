@@ -37,10 +37,11 @@ export interface Transcriber {
     setModel: (model: string) => void;
     multilingual: boolean;
     setMultilingual: (model: boolean) => void;
-    subtask: string;
     setSubtask: (subtask: string) => void;
     language?: string;
     setLanguage: (language: string) => void;
+    device: "webgpu" | "wasm";
+    setDevice: (device: "webgpu" | "wasm") => void;
 }
 
 export function useTranscriber(): Transcriber {
@@ -116,6 +117,7 @@ export function useTranscriber(): Transcriber {
     const [language, setLanguage] = useState<string>(
         Constants.DEFAULT_LANGUAGE,
     );
+    const [device, setDevice] = useState<"webgpu" | "wasm">("webgpu");
 
     const onInputChange = useCallback(() => {
         setTranscript(undefined);
@@ -147,10 +149,11 @@ export function useTranscriber(): Transcriber {
                     subtask: multilingual ? subtask : null,
                     language:
                         multilingual && language !== "auto" ? language : null,
+                    device,
                 });
             }
         },
-        [webWorker, model, multilingual, subtask, language],
+        [webWorker, model, multilingual, subtask, language, device],
     );
 
     const transcriber = useMemo(() => {
@@ -169,6 +172,8 @@ export function useTranscriber(): Transcriber {
             setSubtask,
             language,
             setLanguage,
+            device,
+            setDevice,
         };
     }, [
         isBusy,
@@ -180,6 +185,7 @@ export function useTranscriber(): Transcriber {
         multilingual,
         subtask,
         language,
+        device,
     ]);
 
     return transcriber;

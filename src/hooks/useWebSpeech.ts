@@ -29,6 +29,7 @@ export function useWebSpeech(options: {
         };
 
         recognition.onend = () => {
+            console.log("Web Speech Loop Ended. restarting (if continuous)...");
             setIsListening(false);
             // Auto restart if it was supposed to be continuous but stopped (e.g. silence)
             // Note: We might want a manual "stop" flag to prevent infinite loops if desired
@@ -57,8 +58,11 @@ export function useWebSpeech(options: {
         };
 
         recognition.onerror = (event: any) => {
-            console.error("Web Speech Error:", event.error);
-            setIsListening(false);
+            console.error("Web Speech API Error:", event.error, event.message);
+            // If "not-allowed" or "service-not-allowed", we should probably stop trying
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                setIsListening(false);
+            }
         };
 
         recognitionRef.current = recognition;
