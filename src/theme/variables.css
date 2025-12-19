@@ -40,6 +40,8 @@ ion-toolbar {
     --color: var(--ion-toolbar-text-color);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    /* Ensure title visibility */
+    --color: var(--ion-text-color);
 }
 
 /* Content Area */
@@ -64,7 +66,7 @@ ion-menu ion-item {
     margin-bottom: 4px;
     border-radius: 8px;
     --padding-start: 16px;
-    opacity: 0.8;
+    /* Removed opacity for better legibility in light mode */
 }
 
 ion-menu ion-item.selected {
@@ -85,7 +87,8 @@ ion-menu ion-note {
 
 ion-menu ion-list-header {
     color: var(--ion-text-color);
-    opacity: 0.6;
+    color: var(--ion-text-color);
+    /* Removed opacity: 0.6 */
     font-weight: 700;
     font-size: 20px;
     margin-top: 20px;

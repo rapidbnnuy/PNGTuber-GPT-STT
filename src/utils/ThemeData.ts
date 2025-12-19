@@ -28,7 +28,7 @@ export const getThemeVariables = (mode: 'light' | 'dark', colorId: string, showG
     const isDark = mode === 'dark';
     const bg = isDark ? '#020617' : '#f8fafc'; // Slate 950 vs Slate 50
     const surface = isDark ? '#0f172a' : '#ffffff'; // Slate 900 vs White
-    const text = isDark ? '#f8fafc' : '#0f172a'; // Slate 50 vs Slate 900
+    const text = isDark ? '#f8fafc' : '#020617'; // Slate 50 vs Slate 950 (was Slate 900)
 
 
     // Gradients

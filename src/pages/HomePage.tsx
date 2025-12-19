@@ -38,10 +38,14 @@ export function HomePage() {
                     <IonTitle>PNGTuber-GPT-STT</IonTitle>
                     {/* Status Badge in Toolbar */}
                     <div slot="end" className="flex items-center gap-3 mr-2">
-                        {/* Streamer.bot Status */}
-                        <div className="flex items-center gap-1.5 bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700/50">
-                            <div className={`w-2 h-2 rounded-full ${isStreamerBotConnected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500/50'}`}></div>
-                            <span className={`text-[10px] font-bold ${isStreamerBotConnected ? 'text-green-500' : 'text-red-400/70'}`}>SB</span>
+                        {/* Streamer.bot Status - Use theme variables via dynamic classes or simpler contrast */}
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border"
+                            style={{
+                                backgroundColor: 'var(--ion-card-background)',
+                                borderColor: 'var(--ion-color-step-150, rgba(0,0,0,0.1))'
+                            }}>
+                            <div className={`w-2 h-2 rounded-full ${isStreamerBotConnected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-slate-400'}`}></div>
+                            <span className={`text-[10px] font-bold`} style={{ color: isStreamerBotConnected ? 'var(--ion-color-success)' : 'var(--ion-text-color)', opacity: isStreamerBotConnected ? 1 : 0.6 }}>SB</span>
                         </div>
 
                         <div className="flex items-center gap-1.5">
@@ -67,10 +71,10 @@ export function HomePage() {
                     {/* Content */}
                     <div className="flex-1 relative pb-20"> {/* Added padding bottom */}
                         {!transcriber.output && (
-                            <div className="flex h-full items-center justify-center text-slate-500 py-20 pointer-events-none opacity-50">
+                            <div className="flex h-full items-center justify-center py-20 pointer-events-none" style={{ color: 'var(--ion-text-color)', opacity: 0.7 }}>
                                 <div className="text-center">
                                     <IonIcon icon={micOutline} style={{ fontSize: '48px' }} />
-                                    <p>Ready to Transcribe</p>
+                                    <p className="font-medium mt-2">Ready to Transcribe</p>
                                 </div>
                             </div>
                         )}
