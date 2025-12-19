@@ -10,6 +10,7 @@ import { ThemeSettingsPage } from './pages/ThemeSettingsPage';
 
 /* Theme variables */
 import './components/Menu.css';
+import './theme/global.css';
 
 setupIonicReact();
 

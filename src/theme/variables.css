@@ -69,6 +69,11 @@ ion-menu ion-item {
     /* Removed opacity for better legibility in light mode */
 }
 
+ion-menu ion-item ion-icon {
+    color: var(--ion-text-color);
+    opacity: 0.9;
+}
+
 ion-menu ion-item.selected {
     --background: var(--ion-color-primary);
     --color: var(--ion-color-primary-contrast);
