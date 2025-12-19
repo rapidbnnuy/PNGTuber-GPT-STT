@@ -15,10 +15,11 @@ export interface ThemePreset {
 
 export const THEME_PRESETS: ThemePreset[] = [
     { id: 'blue', name: 'Blue', primary: '#3b82f6', secondary: '#a855f7' },
-    { id: 'purple', name: 'Cyberpunk', primary: '#a855f7', secondary: '#ec4899' },
+    { id: 'purple', name: 'Lavender', primary: '#a855f7', secondary: '#ec4899' },
     { id: 'green', name: 'Nature', primary: '#22c55e', secondary: '#06b6d4' },
     { id: 'orange', name: 'Warm', primary: '#f97316', secondary: '#ef4444' },
-    { id: 'pink', name: 'Vaporwave', primary: '#ec4899', secondary: '#8b5cf6' },
+    { id: 'pink', name: 'Bubblegum', primary: '#ec4899', secondary: '#8b5cf6' },
+    { id: 'red', name: 'Red', primary: '#dc2626', secondary: '#f59e0b' },
 ];
 
 export const getThemeVariables = (mode: 'light' | 'dark', colorId: string, showGradient: boolean) => {
